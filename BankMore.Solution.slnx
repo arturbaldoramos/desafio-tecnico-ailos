@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ContaCorrente/ContaCorrente.csproj" Id="f3081c52-d092-4994-968d-b4a3b2a64c50" />
+  <Project Path="Tarifa/Tarifa.csproj" />
+  <Project Path="Transferencia/Transferencia.csproj" Id="d764a7d5-4f4a-4d8c-b521-8f1180eacbae" />
+</Solution>
