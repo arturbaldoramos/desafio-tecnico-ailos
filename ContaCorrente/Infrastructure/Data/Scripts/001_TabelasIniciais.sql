@@ -1,22 +1,20 @@
--- Tabela de Conta Corrente 
+-- Tabela de Conta Corrente
 CREATE TABLE IF NOT EXISTS contacorrente (
-    idcontacorrente INTEGER PRIMARY KEY AUTOINCREMENT,
-    numero TEXT NOT NULL,
+    id SERIAL PRIMARY KEY,
+    numero TEXT UNIQUE NOT NULL,
     nome TEXT NOT NULL,
     cpf TEXT UNIQUE NOT NULL,
-    ativo INTEGER NOT NULL DEFAULT 1,
-    senha TEXT NOT NULL,
-    salt TEXT
+    ativo INTEGER NOT NULL DEFAULT 1
 );
 
--- Tabela de Movimentaçõe
+-- Tabela de Movimentacoes
 CREATE TABLE IF NOT EXISTS movimento (
-    idmovimento INTEGER PRIMARY KEY AUTOINCREMENT,
-    idcontacorrente INTEGER NOT NULL,
-    datamovimento DATETIME NOT NULL,
+    id SERIAL PRIMARY KEY,
+    contacorrente TEXT NOT NULL,
+    datamovimento TIMESTAMP NOT NULL,
     tipomovimento TEXT NOT NULL, -- 'C' ou 'D'
-    valor REAL NOT NULL,
-    FOREIGN KEY (idcontacorrente) REFERENCES contacorrente (idcontacorrente)
+    valor DECIMAL(18,2) NOT NULL,
+    FOREIGN KEY (contacorrente) REFERENCES contacorrente (numero)
 );
 
 -- Tabela de Idempotência

@@ -7,26 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Dapper" Version="2.1.66" />
-    <PackageReference Include="dbup-sqlite" Version="6.0.4" />
+    <PackageReference Include="dbup-postgresql" Version="7.0.1" />
     <PackageReference Include="KafkaFlow" Version="3.0.10" />
     <PackageReference Include="KafkaFlow.Extensions.Hosting" Version="3.0.10" />
     <PackageReference Include="KafkaFlow.LogHandler.Microsoft" Version="3.0.10" />
     <PackageReference Include="KafkaFlow.Serializer.JsonCore" Version="3.0.10" />
     <PackageReference Include="MediatR" Version="14.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.24" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.24" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Application\DTOs\" />
-    <Folder Include="Application\Validators\" />
-    <Folder Include="Infrastructure\Messaging\" />
-    <Folder Include="Infrastructure\Configuration\" />
-    <Folder Include="Infrastructure\Security\" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>

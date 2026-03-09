@@ -50,7 +50,7 @@ namespace ContaCorrente.Infrastructure.Messaging.Consumers
                 // Criar movimento de debito
                 var movimento = new Movimento
                 {
-                    IdContaCorrente = conta.IdContaCorrente.ToString(),
+                    ContaCorrente = conta.Numero.ToString(),
                     DataMovimento = DateTime.UtcNow,
                     TipoMovimento = "D",
                     Valor = message.ValorTarifa

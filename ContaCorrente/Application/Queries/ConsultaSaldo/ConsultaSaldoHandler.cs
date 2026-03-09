@@ -38,7 +38,7 @@ namespace ContaCorrente.Application.Queries.ConsultaSaldo
             }
 
             // Se não está em cache, calcular do banco
-            var movimentos = await _movimentoRepository.ObterMovimentosPorContaAsync(conta.IdContaCorrente);
+            var movimentos = await _movimentoRepository.ObterMovimentosPorContaAsync(conta.Numero);
 
             var creditos = movimentos.Where(m => m.TipoMovimento == "C").Sum(m => m.Valor);
             var debitos = movimentos.Where(m => m.TipoMovimento == "D").Sum(m => m.Valor);

@@ -71,7 +71,7 @@ namespace ContaCorrente.Infrastructure.Messaging.Consumers
                 {
                     _logger.LogWarning("Transferência {IdRequisicao} já foi processada no ContaCorrente", message.IdRequisicao);
                     resultado.Sucesso = true;
-                    resultado.IdContaCorrenteDestino = contaDestino.IdContaCorrente;
+                    resultado.ContaCorrenteDestino = contaDestino.Numero;
                     await PublicarResultado(producerAccessor, resultado);
                     return;
                 }
@@ -79,7 +79,7 @@ namespace ContaCorrente.Infrastructure.Messaging.Consumers
                 // Criar movimento de DÉBITO na conta origem
                 var movimentoDebito = new Movimento
                 {
-                    IdContaCorrente = contaOrigem.IdContaCorrente.ToString(),
+                    ContaCorrente = contaOrigem.Numero,
                     DataMovimento = DateTime.UtcNow,
                     TipoMovimento = "D",
                     Valor = message.Valor
@@ -97,7 +97,7 @@ namespace ContaCorrente.Infrastructure.Messaging.Consumers
                 // Criar movimento de CRÉDITO na conta destino
                 var movimentoCredito = new Movimento
                 {
-                    IdContaCorrente = contaDestino.IdContaCorrente.ToString(),
+                    ContaCorrente = contaDestino.Numero,
                     DataMovimento = DateTime.UtcNow,
                     TipoMovimento = "C",
                     Valor = message.Valor
@@ -117,7 +117,7 @@ namespace ContaCorrente.Infrastructure.Messaging.Consumers
                 _saldoCache.InvalidarSaldo(message.NumeroContaDestino);
 
                 resultado.Sucesso = true;
-                resultado.IdContaCorrenteDestino = contaDestino.IdContaCorrente;
+                resultado.ContaCorrenteDestino = contaDestino.Numero;
 
                 _logger.LogInformation("Transferência {IdRequisicao} processada com sucesso", message.IdRequisicao);
             }

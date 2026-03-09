@@ -5,6 +5,7 @@ namespace ContaCorrente.Domain.Interfaces
     public interface IMovimentoRepository
     {
         Task AdicionarMovimentoAsync(Movimento movimento);
-        Task<IEnumerable<Movimento>> ObterMovimentosPorContaAsync(int idContaCorrente);
+        Task<IEnumerable<Movimento>> ObterMovimentosPorContaAsync(string contaCorrente);
+        Task<decimal> ObterSaldoAsync(string contaCorrente);
     }
 }

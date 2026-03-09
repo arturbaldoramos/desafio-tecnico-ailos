@@ -1,4 +1,3 @@
-using System.Text;
 using ContaCorrente.Domain.Interfaces;
 using ContaCorrente.Infrastructure.Cache;
 using ContaCorrente.Infrastructure.Data;
@@ -8,8 +7,6 @@ using ContaCorrente.Infrastructure.Messaging.Messages;
 using ContaCorrente.Infrastructure.Security;
 using KafkaFlow;
 using KafkaFlow.Serializer;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,32 +44,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// JWT Configuration
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-builder.Services.Configure<JwtSettings>(jwtSettings);
-
-var secretKey = jwtSettings.GetValue<string>("SecretKey")!;
-var key = Encoding.UTF8.GetBytes(secretKey);
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
-        ValidAudience = jwtSettings.GetValue<string>("Audience"),
-        IssuerSigningKey = new SymmetricSecurityKey(key)
-    };
-});
-
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
@@ -85,10 +56,6 @@ builder.Services.AddScoped<IContaRepository, ContaRepository>();
 builder.Services.AddScoped<IMovimentoRepository, MovimentoRepository>();
 builder.Services.AddScoped<IIdempotenciaRepository, IdempotenciaRepository>();
 
-// Security Services
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IJwtService, JwtService>();
-
 // KafkaFlow
 var kafkaBrokers = builder.Configuration.GetValue<string>("Kafka:Brokers") ?? "localhost:9092";
 
@@ -99,8 +66,22 @@ builder.Services.AddKafka(kafka => kafka
         .CreateTopicIfNotExists(KafkaTopics.TransferenciasSolicitadas, 1, 1)
         .CreateTopicIfNotExists(KafkaTopics.TransferenciasResultado, 1, 1)
         .CreateTopicIfNotExists(KafkaTopics.TarifacoesRealizadas, 1, 1)
+        .CreateTopicIfNotExists(KafkaTopics.UsuarioCadastrado, 1, 1)
+        .CreateTopicIfNotExists(KafkaTopics.UsuarioInativado, 1, 1)
+        .CreateTopicIfNotExists(KafkaTopics.DepositoSolicitado, 1, 1)
+        .CreateTopicIfNotExists(KafkaTopics.SaqueSolicitado, 1, 1)
+        .CreateTopicIfNotExists(KafkaTopics.DepositoResultado, 1, 1)
+        .CreateTopicIfNotExists(KafkaTopics.SaqueResultado, 1, 1)
         .AddProducer("transferencia-resultado-producer", producer => producer
             .DefaultTopic(KafkaTopics.TransferenciasResultado)
+            .AddMiddlewares(m => m.AddSerializer<JsonCoreSerializer>())
+        )
+        .AddProducer("deposito-resultado-producer", producer => producer
+            .DefaultTopic(KafkaTopics.DepositoResultado)
+            .AddMiddlewares(m => m.AddSerializer<JsonCoreSerializer>())
+        )
+        .AddProducer("saque-resultado-producer", producer => producer
+            .DefaultTopic(KafkaTopics.SaqueResultado)
             .AddMiddlewares(m => m.AddSerializer<JsonCoreSerializer>())
         )
         .AddConsumer(consumer => consumer
@@ -135,6 +116,70 @@ builder.Services.AddKafka(kafka => kafka
                 )
             )
         )
+        .AddConsumer(consumer => consumer
+            .Topic(KafkaTopics.UsuarioCadastrado)
+            .WithGroupId("contacorrente-usuario-cadastrado-consumer-group")
+            .WithBufferSize(100)
+            .WithWorkersCount(1)
+            .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+            .AddMiddlewares(middlewares => middlewares
+                .AddSingleTypeDeserializer<UsuarioCadastradoMessage, JsonCoreDeserializer>()
+                .AddTypedHandlers(handlers => handlers
+                    .AddHandler<UsuarioCadastradoConsumer>()
+                    .WhenNoHandlerFound(context =>
+                        Console.WriteLine($"Mensagem sem handler: {context.Message}")
+                    )
+                )
+            )
+        )
+        .AddConsumer(consumer => consumer
+            .Topic(KafkaTopics.UsuarioInativado)
+            .WithGroupId("contacorrente-usuario-inativado-consumer-group")
+            .WithBufferSize(100)
+            .WithWorkersCount(1)
+            .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+            .AddMiddlewares(middlewares => middlewares
+                .AddSingleTypeDeserializer<UsuarioInativadoMessage, JsonCoreDeserializer>()
+                .AddTypedHandlers(handlers => handlers
+                    .AddHandler<UsuarioInativadoConsumer>()
+                    .WhenNoHandlerFound(context =>
+                        Console.WriteLine($"Mensagem sem handler: {context.Message}")
+                    )
+                )
+            )
+        )
+        .AddConsumer(consumer => consumer
+            .Topic(KafkaTopics.DepositoSolicitado)
+            .WithGroupId("contacorrente-deposito-consumer-group")
+            .WithBufferSize(100)
+            .WithWorkersCount(1)
+            .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+            .AddMiddlewares(middlewares => middlewares
+                .AddSingleTypeDeserializer<DepositoSolicitadoMessage, JsonCoreDeserializer>()
+                .AddTypedHandlers(handlers => handlers
+                    .AddHandler<DepositoSolicitadoConsumer>()
+                    .WhenNoHandlerFound(context =>
+                        Console.WriteLine($"Mensagem sem handler: {context.Message}")
+                    )
+                )
+            )
+        )
+        .AddConsumer(consumer => consumer
+            .Topic(KafkaTopics.SaqueSolicitado)
+            .WithGroupId("contacorrente-saque-consumer-group")
+            .WithBufferSize(100)
+            .WithWorkersCount(1)
+            .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+            .AddMiddlewares(middlewares => middlewares
+                .AddSingleTypeDeserializer<SaqueSolicitadoMessage, JsonCoreDeserializer>()
+                .AddTypedHandlers(handlers => handlers
+                    .AddHandler<SaqueSolicitadoConsumer>()
+                    .WhenNoHandlerFound(context =>
+                        Console.WriteLine($"Mensagem sem handler: {context.Message}")
+                    )
+                )
+            )
+        )
     )
 );
 
@@ -154,8 +199,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseMiddleware<JwtClaimsMiddleware>();
 
 app.MapControllers();
 
