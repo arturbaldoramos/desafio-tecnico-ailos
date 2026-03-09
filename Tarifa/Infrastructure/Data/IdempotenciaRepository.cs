@@ -1,5 +1,5 @@
 using Dapper;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using System.Data;
 using Tarifa.Domain.Entities;
 using Tarifa.Domain.Interfaces;
@@ -15,7 +15,7 @@ namespace Tarifa.Infrastructure.Data
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         }
 
-        private IDbConnection CreateConnection() => new SqliteConnection(_connectionString);
+        private IDbConnection CreateConnection() => new NpgsqlConnection(_connectionString);
 
         public async Task<Idempotencia?> ObterPorChaveAsync(string chave)
         {
@@ -32,8 +32,10 @@ namespace Tarifa.Infrastructure.Data
         public async Task SalvarAsync(Idempotencia idempotencia)
         {
             using var db = CreateConnection();
-            var sql = @"INSERT OR REPLACE INTO idempotencia (chave_idempotencia, requisicao, resultado)
-                        VALUES (@ChaveIdempotencia, @Requisicao, @Resultado)";
+            var sql = @"INSERT INTO idempotencia (chave_idempotencia, requisicao, resultado)
+                        VALUES (@ChaveIdempotencia, @Requisicao, @Resultado)
+                        ON CONFLICT (chave_idempotencia) DO UPDATE
+                        SET requisicao = EXCLUDED.requisicao, resultado = EXCLUDED.resultado";
 
             await db.ExecuteAsync(sql, idempotencia);
         }

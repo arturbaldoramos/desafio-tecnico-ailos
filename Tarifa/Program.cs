@@ -8,9 +8,6 @@ using Tarifa.Infrastructure.Messaging.Messages;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar porta 5026
-builder.WebHost.UseUrls("http://localhost:5026");
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

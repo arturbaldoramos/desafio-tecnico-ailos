@@ -1,10 +1,10 @@
 -- Tabela de tarifacoes
 CREATE TABLE IF NOT EXISTS tarifacao (
-    idtarifacao INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     numerocontacorrente TEXT NOT NULL,
     idrequisicaotransferencia TEXT NOT NULL UNIQUE,
-    valor REAL NOT NULL,
-    datatarfacao DATETIME NOT NULL
+    valor DECIMAL(18,2) NOT NULL,
+    datatarfacao TIMESTAMP NOT NULL
 );
 
 -- Tabela de idempotencia para evitar tarifacoes duplicadas
