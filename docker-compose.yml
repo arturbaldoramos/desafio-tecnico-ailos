@@ -36,3 +36,137 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: bankmore
+      POSTGRES_PASSWORD: bankmore
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bankmore"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  autenticacao:
+    build:
+      context: .
+      dockerfile: Autenticacao/Dockerfile
+    container_name: autenticacao
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    ports:
+      - "5027:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=autenticacao;Username=bankmore;Password=bankmore"
+      Kafka__Brokers: kafka:29092
+      RsaKeys__PrivateKeyPath: /app/keys/private.pem
+      RsaKeys__PublicKeyPath: /app/keys/public.pem
+    volumes:
+      - ./Keys:/app/keys:ro
+
+  contacorrente:
+    build:
+      context: .
+      dockerfile: ContaCorrente/Dockerfile
+    container_name: contacorrente
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    ports:
+      - "5024:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=contacorrente;Username=bankmore;Password=bankmore"
+      Kafka__Brokers: kafka:29092
+
+  transferencia:
+    build:
+      context: .
+      dockerfile: Transferencia/Dockerfile
+    container_name: transferencia
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      contacorrente:
+        condition: service_started
+    ports:
+      - "5025:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=transferencia;Username=bankmore;Password=bankmore"
+      ContaCorrenteApi__BaseUrl: http://contacorrente:8080
+      Kafka__Brokers: kafka:29092
+
+  tarifa:
+    build:
+      context: .
+      dockerfile: Tarifa/Dockerfile
+    container_name: tarifa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    ports:
+      - "5026:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=tarifa;Username=bankmore;Password=bankmore"
+      Kafka__Brokers: kafka:29092
+
+  caixa:
+    build:
+      context: .
+      dockerfile: Caixa/Dockerfile
+    container_name: caixa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    ports:
+      - "5028:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=caixa;Username=bankmore;Password=bankmore"
+      Kafka__Brokers: kafka:29092
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Gateway/Dockerfile
+    container_name: gateway
+    depends_on:
+      - autenticacao
+      - contacorrente
+      - transferencia
+      - caixa
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      RsaKeys__PublicKeyPath: /app/keys/public.pem
+      ReverseProxy__Clusters__autenticacao-cluster__Destinations__destination1__Address: http://autenticacao:8080
+      ReverseProxy__Clusters__contacorrente-cluster__Destinations__destination1__Address: http://contacorrente:8080
+      ReverseProxy__Clusters__transferencia-cluster__Destinations__destination1__Address: http://transferencia:8080
+      ReverseProxy__Clusters__caixa-cluster__Destinations__destination1__Address: http://caixa:8080
+    volumes:
+      - ./Keys:/app/keys:ro
+
+volumes:
+  postgres-data:
