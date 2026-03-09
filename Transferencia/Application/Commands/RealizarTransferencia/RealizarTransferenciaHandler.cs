@@ -39,7 +39,7 @@ namespace Transferencia.Application.Commands.RealizarTransferencia
                 if (transferenciaExistente != null)
                 {
                     return Results.Ok(new TransferenciaResponse(
-                        transferenciaExistente.IdTransferencia,
+                        transferenciaExistente.Id,
                         transferenciaExistente.NumeroContaOrigem,
                         transferenciaExistente.NumeroContaDestino,
                         transferenciaExistente.Valor,
@@ -101,7 +101,7 @@ namespace Transferencia.Application.Commands.RealizarTransferencia
             return Results.Accepted(
                 $"/api/transferencia/{request.IdRequisicao}",
                 new TransferenciaResponse(
-                    transferencia.IdTransferencia,
+                    transferencia.Id,
                     transferencia.NumeroContaOrigem,
                     transferencia.NumeroContaDestino,
                     transferencia.Valor,

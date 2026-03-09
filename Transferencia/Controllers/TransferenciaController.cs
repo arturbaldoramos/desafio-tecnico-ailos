@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Transferencia.Application.Commands.RealizarTransferencia;
@@ -25,7 +24,6 @@ namespace Transferencia.Controllers
         /// Realiza uma transferência entre contas (assíncrono via Kafka)
         /// </summary>
         [HttpPost]
-        [Authorize]
         [ProducesResponseType(typeof(TransferenciaResponse), StatusCodes.Status202Accepted)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -52,7 +50,6 @@ namespace Transferencia.Controllers
         /// Consulta o status de uma transferência pelo ID da requisição
         /// </summary>
         [HttpGet("{idRequisicao}")]
-        [Authorize]
         [ProducesResponseType(typeof(TransferenciaResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -66,7 +63,7 @@ namespace Transferencia.Controllers
             }
 
             return Ok(new TransferenciaResponse(
-                transferencia.IdTransferencia,
+                transferencia.Id,
                 transferencia.NumeroContaOrigem,
                 transferencia.NumeroContaDestino,
                 transferencia.Valor,
@@ -79,7 +76,6 @@ namespace Transferencia.Controllers
         /// Retorna informações do usuário autenticado
         /// </summary>
         [HttpGet("me")]
-        [Authorize]
         public IActionResult GetCurrentUser()
         {
             var idContaCorrente = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

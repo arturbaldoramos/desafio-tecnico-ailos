@@ -2,7 +2,7 @@ namespace Transferencia.Domain.Entities
 {
     public class Transferencia
     {
-        public int IdTransferencia { get; set; }
+        public int Id { get; set; }
         public string IdRequisicao { get; set; } = string.Empty;
         public string NumeroContaOrigem { get; set; } = string.Empty;
         public string NumeroContaDestino { get; set; } = string.Empty;

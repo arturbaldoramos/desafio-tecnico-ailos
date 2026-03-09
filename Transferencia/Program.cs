@@ -1,6 +1,5 @@
 using KafkaFlow;
 using KafkaFlow.Serializer;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.OpenApi.Models;
 using Transferencia.Domain.Interfaces;
 using Transferencia.Infrastructure.Data;
@@ -50,7 +49,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Progr
 builder.Services.AddScoped<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddScoped<IIdempotenciaRepository, IdempotenciaRepository>();
 
-// HttpClient para comunicar com ContaCorrente API (para autenticação)
+// HttpClient para comunicar com ContaCorrente API (para consultas de conta)
 var contaCorrenteBaseUrl = builder.Configuration.GetValue<string>("ContaCorrenteApi:BaseUrl")
     ?? "http://localhost:5024";
 
@@ -59,12 +58,6 @@ builder.Services.AddHttpClient<IContaCorrenteApiClient, ContaCorrenteApiClient>(
     client.BaseAddress = new Uri(contaCorrenteBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
-
-// Autenticação via ContaCorrente API
-builder.Services.AddAuthentication("ContaCorrenteAuth")
-    .AddScheme<AuthenticationSchemeOptions, ContaCorrenteAuthenticationHandler>("ContaCorrenteAuth", null);
-
-builder.Services.AddAuthorization();
 
 // KafkaFlow
 var kafkaBrokers = builder.Configuration.GetValue<string>("Kafka:Brokers") ?? "localhost:9092";
@@ -119,8 +112,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseMiddleware<JwtClaimsMiddleware>();
 
 app.MapControllers();
 

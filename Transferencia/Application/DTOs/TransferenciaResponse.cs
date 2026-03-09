@@ -1,7 +1,7 @@
 namespace Transferencia.Application.DTOs
 {
     public record TransferenciaResponse(
-        int IdTransferencia,
+        int Id,
         string ContaOrigem,
         string ContaDestino,
         decimal Valor,

@@ -1,5 +1,5 @@
 using Dapper;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using System.Data;
 using Transferencia.Domain.Entities;
 using Transferencia.Domain.Interfaces;
@@ -15,32 +15,32 @@ namespace Transferencia.Infrastructure.Data
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         }
 
-        private IDbConnection CreateConnection() => new SqliteConnection(_connectionString);
+        private IDbConnection CreateConnection() => new NpgsqlConnection(_connectionString);
 
         public async Task AdicionarAsync(Domain.Entities.Transferencia transferencia)
         {
             using var db = CreateConnection();
             var sql = @"INSERT INTO transferencia
                         (idrequisicao, numerocontaorigem, numerocontadestino, datamovimento, valor, status, mensagemerro)
-                        VALUES (@IdRequisicao, @NumeroContaOrigem, @NumeroContaDestino, @DataMovimento, @Valor, @Status, @MensagemErro);
-                        SELECT last_insert_rowid();";
+                        VALUES (@IdRequisicao, @NumeroContaOrigem, @NumeroContaDestino, @DataMovimento, @Valor, @Status, @MensagemErro)
+                        RETURNING id;";
 
-            transferencia.IdTransferencia = await db.ExecuteScalarAsync<int>(sql, transferencia);
+            transferencia.Id = await db.ExecuteScalarAsync<int>(sql, transferencia);
         }
 
         public async Task<Domain.Entities.Transferencia?> ObterPorIdAsync(int id)
         {
             using var db = CreateConnection();
-            var sql = @"SELECT idtransferencia AS IdTransferencia,
+            var sql = @"SELECT id,
                                idrequisicao AS IdRequisicao,
                                numerocontaorigem AS NumeroContaOrigem,
                                numerocontadestino AS NumeroContaDestino,
                                datamovimento AS DataMovimento,
-                               valor AS Valor,
-                               status AS Status,
+                               valor,
+                               status,
                                mensagemerro AS MensagemErro
                         FROM transferencia
-                        WHERE idtransferencia = @Id";
+                        WHERE id = @Id";
 
             return await db.QueryFirstOrDefaultAsync<Domain.Entities.Transferencia>(sql, new { Id = id });
         }
@@ -48,13 +48,13 @@ namespace Transferencia.Infrastructure.Data
         public async Task<Domain.Entities.Transferencia?> ObterPorIdRequisicaoAsync(string idRequisicao)
         {
             using var db = CreateConnection();
-            var sql = @"SELECT idtransferencia AS IdTransferencia,
+            var sql = @"SELECT id,
                                idrequisicao AS IdRequisicao,
                                numerocontaorigem AS NumeroContaOrigem,
                                numerocontadestino AS NumeroContaDestino,
                                datamovimento AS DataMovimento,
-                               valor AS Valor,
-                               status AS Status,
+                               valor,
+                               status,
                                mensagemerro AS MensagemErro
                         FROM transferencia
                         WHERE idrequisicao = @IdRequisicao";

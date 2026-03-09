@@ -1,5 +1,5 @@
 using Dapper;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using System.Data;
 using Transferencia.Domain.Entities;
 using Transferencia.Domain.Interfaces;
@@ -15,7 +15,7 @@ namespace Transferencia.Infrastructure.Data
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         }
 
-        private IDbConnection CreateConnection() => new SqliteConnection(_connectionString);
+        private IDbConnection CreateConnection() => new NpgsqlConnection(_connectionString);
 
         public async Task<Idempotencia?> ObterPorChaveAsync(string chave)
         {

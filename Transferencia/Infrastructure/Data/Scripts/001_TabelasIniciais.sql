@@ -1,13 +1,11 @@
 -- Tabela de transferências
 CREATE TABLE IF NOT EXISTS transferencia (
-    idtransferencia INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     idrequisicao TEXT NOT NULL,
-    idcontacorrenteorigem INTEGER NOT NULL,
     numerocontaorigem TEXT NOT NULL,
-    idcontacorrentedestino INTEGER,
     numerocontadestino TEXT NOT NULL,
-    datamovimento DATETIME NOT NULL,
-    valor REAL NOT NULL,
+    datamovimento TIMESTAMP NOT NULL,
+    valor DECIMAL(18,2) NOT NULL,
     status TEXT NOT NULL DEFAULT 'PENDENTE',
     mensagemerro TEXT
 );
