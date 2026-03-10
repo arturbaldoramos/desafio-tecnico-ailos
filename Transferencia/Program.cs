@@ -7,8 +7,6 @@ using Transferencia.Infrastructure.Messaging;
 using Transferencia.Infrastructure.Messaging.Consumers;
 using Transferencia.Infrastructure.Messaging.Messages;
 using Transferencia.Infrastructure.Security;
-using Transferencia.Infrastructure.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -48,16 +46,6 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Progr
 // Repositories
 builder.Services.AddScoped<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddScoped<IIdempotenciaRepository, IdempotenciaRepository>();
-
-// HttpClient para comunicar com ContaCorrente API (para consultas de conta)
-var contaCorrenteBaseUrl = builder.Configuration.GetValue<string>("ContaCorrenteApi:BaseUrl")
-    ?? "http://localhost:5024";
-
-builder.Services.AddHttpClient<IContaCorrenteApiClient, ContaCorrenteApiClient>(client =>
-{
-    client.BaseAddress = new Uri(contaCorrenteBaseUrl);
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
 
 // KafkaFlow
 var kafkaBrokers = builder.Configuration.GetValue<string>("Kafka:Brokers") ?? "localhost:9092";
